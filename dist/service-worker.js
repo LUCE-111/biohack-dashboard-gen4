@@ -1,6 +1,6 @@
 
-const CACHE_NAME = 'biohack-dashboard-4.1.1';
-const PRECACHE = ["./","./index.html","./manifest.webmanifest","./icons/icon-192.png","./icons/icon-512.png","./assets/index-C6HVNGiX.css","./assets/index-Dvh2yr7l.js"];
+const CACHE_NAME = 'biohack-dashboard-4.2.0';
+const PRECACHE = ["./","./index.html","./manifest.webmanifest","./icons/icon-192.png","./icons/icon-512.png","./assets/index-D4gPnMDK.css","./assets/index-0o4LPUpT.js"];
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE)));
 });

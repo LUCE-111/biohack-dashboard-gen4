@@ -140,7 +140,7 @@ export function getShiftInstanceKey(scheduleKey: ScheduleKey, now: Date, setting
     const workStart = parseTimeToMinutes(settings.night.workStart);
     const workEnd = parseTimeToMinutes(settings.night.workEnd);
     const shiftCrossesMidnight = workEnd <= workStart;
-    const closeMinutes = workEnd + settings.night.commuteFromMinutes;
+    const closeMinutes = workEnd + settings.night.postShiftPrepMinutes + settings.night.commuteFromMinutes + settings.night.postCommuteWindDownMinutes;
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
     if (shiftCrossesMidnight && currentMinutes < closeMinutes) {

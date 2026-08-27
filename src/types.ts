@@ -1,12 +1,15 @@
 export type Mode = 'day' | 'off' | 'night' | 'recovery';
 export type ScheduleKey = 'day' | 'off1' | 'off2' | 'off3' | 'night' | 'recovery';
 export type ThemeTone = 'day' | 'off' | 'night' | 'recovery';
-export type TaskTag = 'supp' | 'food' | 'rest' | 'work' | 'transit' | 'sleep' | 'alert';
+export type TaskTag = 'supp' | 'food' | 'rest' | 'work' | 'transit' | 'sleep' | 'alert' | 'prep';
 export type TaskType = 'normal' | 'work' | 'transit' | 'sleep';
 export type TaskFilter = 'all' | 'supp' | 'work' | 'sleep';
 export type PrimaryView = 'today' | 'schedule' | 'supplements' | 'settings';
 export type ShiftKind = 'day' | 'night';
 export type SettingsApplyMode = 'now' | 'next';
+export type TransportMode = 'drive' | 'transit' | 'walk' | 'bike' | 'other';
+export type EvidenceLevel = 'guideline' | 'conditional' | 'general' | 'personal';
+export type DrowsinessState = 'okay' | 'sleepy' | 'unsafe';
 
 export interface ScheduleTask {
   id: string;
@@ -57,8 +60,15 @@ export interface SupplementRoutineItem {
 export interface ShiftTimeSettings {
   workStart: string;
   workEnd: string;
+  preShiftPrepMinutes: number;
+  departureBufferMinutes: number;
   commuteToMinutes: number;
+  commuteToTransport: TransportMode;
+  postShiftPrepMinutes: number;
   commuteFromMinutes: number;
+  commuteFromTransport: TransportMode;
+  postCommuteWindDownMinutes: number;
+  postNapBufferMinutes: number;
 }
 
 export interface WorkSettings {
@@ -72,7 +82,7 @@ export interface PendingWorkSettings {
 }
 
 export interface PersistedState {
-  schemaVersion: 2;
+  schemaVersion: 3;
   mode: Mode;
   offDay: 1 | 2 | 3;
   checkedTaskIds: readonly string[];
@@ -102,4 +112,31 @@ export interface ScheduleChange {
 export interface ValidationIssue {
   shift: ShiftKind;
   message: string;
+}
+
+export interface SleepOpportunity {
+  start: string;
+  end: string;
+  durationMinutes: number;
+  label: string;
+}
+
+export interface TransitionSnapshot {
+  shift: ShiftKind;
+  prepStart: string;
+  departureTime: string;
+  workStart: string;
+  workEnd: string;
+  leaveWorkTime: string;
+  homeArrivalTime: string;
+  windDownEndTime: string;
+  commuteToTransport: TransportMode;
+  commuteFromTransport: TransportMode;
+}
+
+export interface GuidanceItem {
+  id: string;
+  title: string;
+  body: string;
+  evidence: EvidenceLevel;
 }

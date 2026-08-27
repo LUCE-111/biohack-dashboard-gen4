@@ -42,9 +42,13 @@ test('night after-midnight work takes precedence over the pre-shift sleep block'
   assert.equal(active?.task.id, 'night-fast');
 });
 
-test('night shift instance stays on the previous date after midnight', () => {
-  const now = new Date(2026, 7, 29, 2, 15, 0);
-  assert.equal(getShiftInstanceKey('night', now, defaultWorkSettings), 'night_2026-08-28');
+test('night shift instance stays on the previous date through post-commute wind-down', () => {
+  const duringWork = new Date(2026, 7, 29, 2, 15, 0);
+  const duringWindDown = new Date(2026, 7, 29, 9, 30, 0);
+  const afterTransition = new Date(2026, 7, 29, 10, 0, 0);
+  assert.equal(getShiftInstanceKey('night', duringWork, defaultWorkSettings), 'night_2026-08-28');
+  assert.equal(getShiftInstanceKey('night', duringWindDown, defaultWorkSettings), 'night_2026-08-28');
+  assert.equal(getShiftInstanceKey('night', afterTransition, defaultWorkSettings), 'night_2026-08-29');
 });
 
 test('remaining time is formatted in Korean', () => {

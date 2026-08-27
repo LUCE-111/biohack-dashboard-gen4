@@ -3,7 +3,13 @@ import test from 'node:test';
 import { schedules } from './schedules.ts';
 import { defaultWorkSettings } from './settings.ts';
 import { supplements } from './supplements.ts';
-import { getScheduleChanges, resolveSchedule, validateWorkSettings } from '../lib/schedule.ts';
+import {
+  getScheduleChanges,
+  getSleepOpportunity,
+  getTransitionSnapshot,
+  resolveSchedule,
+  validateWorkSettings,
+} from '../lib/schedule.ts';
 import { parseTimeToMinutes } from '../lib/time.ts';
 
 const supplementIds = new Set(supplements.map((supplement) => supplement.id));
@@ -35,25 +41,70 @@ test('all six source schedule variants are represented', () => {
   assert.deepEqual(Object.keys(schedules).sort(), ['day', 'night', 'off1', 'off2', 'off3', 'recovery']);
 });
 
-test('day commute and work blocks recalculate from settings', () => {
+test('day preparation, commute and post-shift blocks recalculate from settings', () => {
   const settings = {
     ...defaultWorkSettings,
     day: {
+      ...defaultWorkSettings.day,
       workStart: '08:00',
       workEnd: '18:30',
+      preShiftPrepMinutes: 40,
+      departureBufferMinutes: 10,
       commuteToMinutes: 45,
+      postShiftPrepMinutes: 15,
       commuteFromMinutes: 50,
+      postCommuteWindDownMinutes: 20,
     },
   };
   const schedule = resolveSchedule('day', settings);
+  const prep = schedule.tasks.find((task) => task.id === 'day-wake');
+  const buffer = schedule.tasks.find((task) => task.id === 'day-departure-buffer');
   const commuteIn = schedule.tasks.find((task) => task.id === 'day-commute-in');
+  const postShift = schedule.tasks.find((task) => task.id === 'day-postshift-prep');
   const commuteOut = schedule.tasks.find((task) => task.id === 'day-commute-out');
+  const windDown = schedule.tasks.find((task) => task.id === 'day-winddown');
 
+  assert.equal(prep?.start, '06:25');
+  assert.equal(prep?.end, '07:05');
+  assert.equal(buffer?.start, '07:05');
+  assert.equal(buffer?.end, '07:15');
   assert.equal(commuteIn?.start, '07:15');
   assert.equal(commuteIn?.end, '08:00');
-  assert.equal(commuteOut?.start, '18:30');
-  assert.equal(commuteOut?.end, '19:20');
+  assert.equal(postShift?.start, '18:30');
+  assert.equal(postShift?.end, '18:45');
+  assert.equal(commuteOut?.start, '18:45');
+  assert.equal(commuteOut?.end, '19:35');
+  assert.equal(windDown?.end, '19:55');
   assert.ok(getScheduleChanges(schedules.day, schedule).length > 0);
+});
+
+test('night nap buffer and departure chain remain ordered', () => {
+  const schedule = resolveSchedule('night', defaultWorkSettings);
+  const napBuffer = schedule.tasks.find((task) => task.id === 'night-nap-buffer');
+  const prep = schedule.tasks.find((task) => task.id === 'night-prep');
+  const departureBuffer = schedule.tasks.find((task) => task.id === 'night-departure-buffer');
+  const commute = schedule.tasks.find((task) => task.id === 'night-commute-in');
+
+  assert.equal(napBuffer?.end, '15:50');
+  assert.equal(prep?.start, '15:50');
+  assert.equal(prep?.end, '16:30');
+  assert.equal(departureBuffer?.end, '16:40');
+  assert.equal(commute?.end, '17:40');
+});
+
+test('transition snapshot separates preparation and travel', () => {
+  const snapshot = getTransitionSnapshot(defaultWorkSettings, 'night');
+  assert.equal(snapshot.prepStart, '15:50');
+  assert.equal(snapshot.departureTime, '16:40');
+  assert.equal(snapshot.homeArrivalTime, '09:15');
+  assert.equal(snapshot.windDownEndTime, '09:45');
+});
+
+test('sleep opportunity accounts for preparation and post-commute wind-down', () => {
+  const night = getSleepOpportunity(defaultWorkSettings, 'night');
+  assert.equal(night.start, '09:45');
+  assert.equal(night.end, '15:50');
+  assert.equal(night.durationMinutes, 365);
 });
 
 test('settings validation blocks hard schedule conflicts', () => {
@@ -67,6 +118,16 @@ test('settings validation blocks hard schedule conflicts', () => {
   assert.ok(validateWorkSettings(settings).some((issue) => issue.shift === 'day'));
 });
 
+test('night preparation cannot overlap post-nap recovery buffer', () => {
+  const settings = {
+    ...defaultWorkSettings,
+    night: {
+      ...defaultWorkSettings.night,
+      postNapBufferMinutes: 60,
+    },
+  };
+  assert.ok(validateWorkSettings(settings).some((issue) => issue.message.includes('낮잠 후 회복 버퍼')));
+});
 
 test('temporarily empty time inputs report validation issues without crashing preview resolution', () => {
   const settings = {

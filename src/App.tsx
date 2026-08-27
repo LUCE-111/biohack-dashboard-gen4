@@ -7,6 +7,7 @@ import { RotateIcon } from './components/Icons';
 import { PrimaryNavigation } from './components/PrimaryNavigation';
 import { PwaBanner } from './components/PwaBanner';
 import { SafetyPanel } from './components/SafetyPanel';
+import { DrivingSafetyPanel, ScientificGuidancePanel, SleepOpportunityPanel, TransitionPanel } from './components/SciencePanels';
 import { SettingsPanel } from './components/SettingsPanel';
 import { SummaryCards } from './components/SummaryCards';
 import { SupplementPanel } from './components/SupplementPanel';
@@ -39,6 +40,13 @@ export default function App() {
   const completed = taskIds.filter((taskId) => dashboard.checkedTaskIds.has(taskId)).length;
   const activeTaskId = activeTask ? `${shiftInstanceKey}_${activeTask.task.id}` : null;
   const activeChecked = activeTaskId ? dashboard.checkedTaskIds.has(activeTaskId) : false;
+  const scienceShift = scheduleKey === 'day' ? 'day' : scheduleKey === 'night' ? 'night' : null;
+  const showDrivingSafety = scheduleKey === 'night' && (
+    activeTask?.task.id === 'night-work-late'
+    || activeTask?.task.id === 'night-postshift-prep'
+    || activeTask?.task.id === 'night-commute-out'
+    || activeTask?.task.id === 'night-winddown'
+  );
 
   useEffect(() => {
     dashboard.activatePendingSettings(shiftInstanceKey);
@@ -103,6 +111,9 @@ export default function App() {
                   }
                 }}
               />
+              {scheduleKey === 'day' || scheduleKey === 'night' ? (
+                <TransitionPanel shift={scheduleKey} settings={dashboard.workSettings} />
+              ) : null}
               <SummaryCards schedule={schedule} completed={completed} total={schedule.tasks.length} />
               <section className="rounded-3xl border border-white/8 bg-white/[0.025] p-5 sm:p-6" aria-labelledby="today-guide-heading">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Shift instance</p>
@@ -117,11 +128,14 @@ export default function App() {
               </section>
             </div>
             <aside className="space-y-5 lg:sticky lg:top-48 lg:self-start" aria-label="오늘 상세">
+              {showDrivingSafety ? <DrivingSafetyPanel settings={dashboard.workSettings} /> : null}
+              {scienceShift ? <SleepOpportunityPanel shift={scienceShift} settings={dashboard.workSettings} /> : null}
+              <ScientificGuidancePanel scheduleKey={scheduleKey} settings={dashboard.workSettings} />
               <SafetyPanel items={schedule.safety} />
               <section className="rounded-3xl border border-white/8 bg-white/[0.025] p-5">
                 <p className="text-xs font-semibold text-slate-300">시간 변경이 필요하신가요?</p>
-                <p className="mt-1 text-sm leading-6 text-slate-500">출퇴근·근무시간은 설정에서 변경하면 연결 일정을 자동 계산합니다.</p>
-                <button type="button" onClick={() => setView('settings')} className="mt-3 min-h-12 w-full rounded-2xl bg-white/8 px-4 text-sm font-semibold text-white hover:bg-white/12">근무시간 설정</button>
+                <p className="mt-1 text-sm leading-6 text-slate-500">근무, 준비, 출발 버퍼, 이동, 귀가 후 전환 시간을 각각 바꾸면 연결 일정을 자동 계산합니다.</p>
+                <button type="button" onClick={() => setView('settings')} className="mt-3 min-h-12 w-full rounded-2xl bg-white/8 px-4 text-sm font-semibold text-white hover:bg-white/12">준비 · 이동 설정</button>
               </section>
             </aside>
           </div>
@@ -176,7 +190,7 @@ export default function App() {
       </main>
 
       <footer className="mx-auto hidden max-w-6xl px-4 pb-10 pt-2 text-center text-[11px] text-slate-600 md:block sm:px-6 lg:px-8">
-        <p>Bio-Hack Dashboard Gen 4.1.1 · PWA · Shift 기반 로컬 저장</p>
+        <p>Bio-Hack Dashboard Gen 4.2 · Shift transition · Evidence-aware PWA</p>
       </footer>
     </div>
   );

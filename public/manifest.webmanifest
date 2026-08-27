@@ -1,7 +1,7 @@
 {
-  "name": "Bio-Hack Dashboard Gen 4.1.1",
+  "name": "Bio-Hack Dashboard Gen 4.2",
   "short_name": "Bio-Hack",
-  "description": "5조 2교대 근무 및 영양제 루틴 대시보드",
+  "description": "5조 2교대 근무, 출퇴근 준비·이동, 수면 기회 및 영양제 루틴을 관리하는 대시보드",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

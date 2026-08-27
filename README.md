@@ -1,4 +1,4 @@
-# Bio-Hack Dashboard Gen 4.1.1
+# Bio-Hack Dashboard Gen 4.2
 
 첨부된 Gen 3.0 일정과 현재 영양제 루틴을 바탕으로 재구성한 React + strict TypeScript + Tailwind CSS 모바일 우선 PWA입니다.
 
@@ -10,9 +10,7 @@ Node.js 22 이상을 권장합니다.
 npm install
 ```
 
-`tsc`를 찾을 수 없다는 메시지는 의존성이 아직 설치되지 않았다는 의미입니다. `npm install` 후 로컬 `node_modules/.bin/tsc`가 자동 사용됩니다. 저장소의 `typecheck` 래퍼는 정상 설치 환경에서는 공식 `@types/react`를 사용하고, 의존성을 받을 수 없는 제한된 검증 환경에서만 별도 fallback 선언을 사용합니다.
-
-최초 `npm install`이 성공하면 `package-lock.json`이 생성됩니다. 이후에는 그 lockfile을 함께 보관하고 `npm ci`로 동일한 의존성을 재현하는 것을 권장합니다.
+최초 설치 후 생성되는 `package-lock.json`을 저장소에 포함하고, 이후에는 `npm ci`로 동일한 의존성을 재현하는 것을 권장합니다.
 
 ## 개발 실행
 
@@ -26,26 +24,49 @@ npm run dev
 npm run dev:mobile
 ```
 
-터미널에 표시된 PC의 LAN 주소로 접속합니다. 단, 일반 HTTP LAN 주소에서는 모바일 브라우저의 보안 정책 때문에 PWA 설치/Service Worker가 제한될 수 있습니다.
-
 ## 모바일 단독 실행(PWA)
-
-프로덕션 빌드:
 
 ```bash
 npm run build
 ```
 
-생성된 `dist/`를 HTTPS 정적 호스팅에 배포한 뒤 모바일에서 한 번 접속합니다.
+생성된 `dist/`를 HTTPS 정적 호스팅에 배포합니다. GitHub Pages 배포 시 기존 Actions workflow를 그대로 사용할 수 있습니다.
 
 - Android Chrome: 메뉴 → **앱 설치 / 홈 화면에 추가**
 - iPhone Safari: 공유 → **홈 화면에 추가**
 
-설치 후에는 홈 화면 아이콘으로 standalone 실행되며, 첫 온라인 로드 이후 핵심 일정/체크/설정 화면은 오프라인에서도 동작하도록 Service Worker가 캐시합니다.
+Service Worker 캐시는 Gen 4.2로 갱신되어 기존 설치본에서도 업데이트를 감지합니다.
+
+## Gen 4.2 주요 변경
+
+- 주간/야간 **출근 준비 · 출발 버퍼 · 출근 이동**을 별도 설정
+- **퇴근 준비 · 퇴근 이동 · 귀가 후 전환/수면 준비**를 별도 설정
+- 출근/퇴근 이동수단: 자가운전, 대중교통, 도보, 자전거, 기타
+- 야간근무 **낮잠 후 회복 버퍼** 설정
+- 모든 설정을 근무 시작/종료 anchor와 연결해 타임라인 자동 재계산
+- 야간 Shift Instance를 귀가 후 수면 준비 종료까지 유지
+- **Sleep Opportunity**: 실제 수면시간과 구분된 일정상 수면 가능시간 표시
+- **Shift Transition**: 준비 시작, 출발 권장, 귀가 예상, 전환 종료 요약
+- 야간근무 후 자가운전 시 **퇴근 안전 자가체크**
+- 근거 수준을 `Guideline / Conditional / General principle / Personal routine`으로 구분
+- 빛, 카페인, 계획된 야간 전 낮잠에 대한 상황별 과학 패널
+- Gen 4.1 저장값을 `schemaVersion: 3`으로 자동 migration
+- 영양제 문구는 첨부 자료 기반 **Personal routine**으로 과학 가이드와 분리
+
+## 과학 패널 원칙
+
+과학 패널은 일반적인 근무·수면 관리 정보를 제공하며 개인 의료 진단이나 운전 가능 판정을 하지 않습니다. 주요 근거 프레임은 AASM shift-work guidance, NIOSH fatigue/drowsy-driving guidance, NHLBI healthy-sleep guidance입니다.
+
+특히:
+
+- 카페인은 충분한 수면을 대체하는 수단으로 표현하지 않습니다.
+- 야간 전 낮잠, 밝은 빛 등은 근거 수준이 조건부인 경우 그대로 표시합니다.
+- Sleep Opportunity는 실제 수면시간이나 수면의 질을 의미하지 않습니다.
+- 심한 졸림을 선택하면 앱은 운전을 권하지 않고 휴식 또는 대체 교통수단을 제안합니다.
 
 ## 검증 순서
 
-반드시 아래 순서로 실행합니다.
+완료 판정 전 반드시 아래 순서로 실행합니다.
 
 ```bash
 npm run typecheck
@@ -54,17 +75,4 @@ npm run test
 npm run build
 ```
 
-## Gen 4.1 주요 변경
-
-- 주간/야간 근무 시작·종료 및 출퇴근 소요시간 설정
-- 변경 Preview와 충돌 차단
-- `다음 Shift부터` / `즉시 적용` 선택
-- 주간 출근·퇴근·운동·저녁 루틴 자동 재계산
-- 야간 출근·퇴근 및 전/후반 업무 구간 자동 재계산
-- 야간 자정 이후에도 같은 `Shift Instance`로 체크 기록 유지
-- 모바일 Today 중심 UX와 하단 4탭 내비게이션
-- NOW + NEXT, 48px 완료 버튼, 수동 `NOW로 이동`
-- 체크 초기화 Undo
-- PWA manifest, standalone/safe-area, 오프라인 캐시, 업데이트 배너
-- persisted state `schemaVersion: 2`와 Gen 4 상태 migration
-- 직접 작성하는 소스는 TypeScript/TSX만 사용하며 빌드 산출물의 JavaScript는 허용
+직접 작성하는 소스는 TypeScript/TSX만 사용합니다. 빌드 과정에서 Vite가 생성하는 JavaScript 산출물은 정상적인 배포 artifact입니다.

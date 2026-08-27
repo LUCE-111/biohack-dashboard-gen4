@@ -1,8 +1,8 @@
 import { copyWorkSettings, defaultWorkSettings } from '../data/settings.ts';
-import type { Mode, PendingWorkSettings, PersistedState, WorkSettings } from '../types';
+import type { Mode, PendingWorkSettings, PersistedState, TransportMode, WorkSettings } from '../types';
 
 export const STORAGE_KEY = 'biohack_gen4_state';
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export const initialPersistedState: PersistedState = {
   schemaVersion: SCHEMA_VERSION,
@@ -21,37 +21,44 @@ function isOffDay(value: unknown): value is 1 | 2 | 3 {
   return value === 1 || value === 2 || value === 3;
 }
 
-function isShiftTimeSettings(value: unknown): boolean {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
+function isTransportMode(value: unknown): value is TransportMode {
+  return value === 'drive' || value === 'transit' || value === 'walk' || value === 'bike' || value === 'other';
+}
 
-  const workStart = 'workStart' in value ? value.workStart : undefined;
-  const workEnd = 'workEnd' in value ? value.workEnd : undefined;
-  const commuteToMinutes = 'commuteToMinutes' in value ? value.commuteToMinutes : undefined;
-  const commuteFromMinutes = 'commuteFromMinutes' in value ? value.commuteFromMinutes : undefined;
-
-  return (
-    typeof workStart === 'string'
-    && typeof workEnd === 'string'
-    && typeof commuteToMinutes === 'number'
-    && Number.isFinite(commuteToMinutes)
-    && typeof commuteFromMinutes === 'number'
-    && Number.isFinite(commuteFromMinutes)
-  );
+function readFiniteNumber(value: unknown, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
 
 function readShiftTimeSettings(value: unknown, fallback: WorkSettings['day']): WorkSettings['day'] {
-  if (!isShiftTimeSettings(value) || typeof value !== 'object' || value === null) {
+  if (typeof value !== 'object' || value === null) {
     return { ...fallback };
   }
 
   const workStart = 'workStart' in value && typeof value.workStart === 'string' ? value.workStart : fallback.workStart;
   const workEnd = 'workEnd' in value && typeof value.workEnd === 'string' ? value.workEnd : fallback.workEnd;
-  const commuteToMinutes = 'commuteToMinutes' in value && typeof value.commuteToMinutes === 'number' ? value.commuteToMinutes : fallback.commuteToMinutes;
-  const commuteFromMinutes = 'commuteFromMinutes' in value && typeof value.commuteFromMinutes === 'number' ? value.commuteFromMinutes : fallback.commuteFromMinutes;
+  const preShiftPrepMinutes = 'preShiftPrepMinutes' in value ? readFiniteNumber(value.preShiftPrepMinutes, fallback.preShiftPrepMinutes) : fallback.preShiftPrepMinutes;
+  const departureBufferMinutes = 'departureBufferMinutes' in value ? readFiniteNumber(value.departureBufferMinutes, fallback.departureBufferMinutes) : fallback.departureBufferMinutes;
+  const commuteToMinutes = 'commuteToMinutes' in value ? readFiniteNumber(value.commuteToMinutes, fallback.commuteToMinutes) : fallback.commuteToMinutes;
+  const commuteToTransportValue = 'commuteToTransport' in value ? value.commuteToTransport : undefined;
+  const postShiftPrepMinutes = 'postShiftPrepMinutes' in value ? readFiniteNumber(value.postShiftPrepMinutes, fallback.postShiftPrepMinutes) : fallback.postShiftPrepMinutes;
+  const commuteFromMinutes = 'commuteFromMinutes' in value ? readFiniteNumber(value.commuteFromMinutes, fallback.commuteFromMinutes) : fallback.commuteFromMinutes;
+  const commuteFromTransportValue = 'commuteFromTransport' in value ? value.commuteFromTransport : undefined;
+  const postCommuteWindDownMinutes = 'postCommuteWindDownMinutes' in value ? readFiniteNumber(value.postCommuteWindDownMinutes, fallback.postCommuteWindDownMinutes) : fallback.postCommuteWindDownMinutes;
+  const postNapBufferMinutes = 'postNapBufferMinutes' in value ? readFiniteNumber(value.postNapBufferMinutes, fallback.postNapBufferMinutes) : fallback.postNapBufferMinutes;
 
-  return { workStart, workEnd, commuteToMinutes, commuteFromMinutes };
+  return {
+    workStart,
+    workEnd,
+    preShiftPrepMinutes,
+    departureBufferMinutes,
+    commuteToMinutes,
+    commuteToTransport: isTransportMode(commuteToTransportValue) ? commuteToTransportValue : fallback.commuteToTransport,
+    postShiftPrepMinutes,
+    commuteFromMinutes,
+    commuteFromTransport: isTransportMode(commuteFromTransportValue) ? commuteFromTransportValue : fallback.commuteFromTransport,
+    postCommuteWindDownMinutes,
+    postNapBufferMinutes,
+  };
 }
 
 function readWorkSettings(value: unknown): WorkSettings {
@@ -85,20 +92,22 @@ function readPending(value: unknown): PendingWorkSettings | null {
   };
 }
 
+function cloneInitialState(): PersistedState {
+  return {
+    ...initialPersistedState,
+    checkedTaskIds: [...initialPersistedState.checkedTaskIds],
+    workSettings: copyWorkSettings(initialPersistedState.workSettings),
+  };
+}
+
 export function parsePersistedState(raw: string | null): PersistedState {
   if (!raw) {
-    return {
-      ...initialPersistedState,
-      workSettings: copyWorkSettings(initialPersistedState.workSettings),
-    };
+    return cloneInitialState();
   }
 
   const parsed: unknown = JSON.parse(raw);
   if (typeof parsed !== 'object' || parsed === null) {
-    return {
-      ...initialPersistedState,
-      workSettings: copyWorkSettings(initialPersistedState.workSettings),
-    };
+    return cloneInitialState();
   }
 
   const modeValue = 'mode' in parsed ? parsed.mode : undefined;

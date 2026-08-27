@@ -10,7 +10,7 @@ export function SupplementPanel() {
         </div>
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Supplement routine</p>
-          <h2 id="supplement-heading" className="mt-0.5 text-lg font-semibold text-white">현재 영양제 루틴</h2>
+          <div className="mt-0.5 flex flex-wrap items-center gap-2"><h2 id="supplement-heading" className="text-lg font-semibold text-white">현재 영양제 루틴</h2><span className="rounded-full border border-violet-300/20 bg-violet-300/8 px-2 py-0.5 text-[10px] font-semibold text-violet-200">Personal routine</span></div>
         </div>
       </div>
 

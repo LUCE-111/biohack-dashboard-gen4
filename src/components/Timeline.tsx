@@ -20,6 +20,7 @@ const tagLabel: Readonly<Record<TaskTag, string>> = {
   transit: '이동',
   sleep: '수면',
   alert: '주의',
+  prep: '준비',
 };
 
 const tagClass: Readonly<Record<TaskTag, string>> = {
@@ -30,6 +31,7 @@ const tagClass: Readonly<Record<TaskTag, string>> = {
   transit: 'border-sky-300/20 bg-sky-300/10 text-sky-200',
   sleep: 'border-blue-300/20 bg-blue-300/10 text-blue-200',
   alert: 'border-rose-300/20 bg-rose-300/10 text-rose-200',
+  prep: 'border-violet-300/20 bg-violet-300/10 text-violet-200',
 };
 
 function isVisible(tag: TaskTag, filter: TaskFilter): boolean {
