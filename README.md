@@ -1,4 +1,4 @@
-# Bio-Hack Dashboard Gen 4.1
+# Bio-Hack Dashboard Gen 4.1.1
 
 첨부된 Gen 3.0 일정과 현재 영양제 루틴을 바탕으로 재구성한 React + strict TypeScript + Tailwind CSS 모바일 우선 PWA입니다.
 

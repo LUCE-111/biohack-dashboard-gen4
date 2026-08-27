@@ -23,6 +23,10 @@ declare module 'react' {
   export function StrictMode(props: StrictModeProps): JSX.Element;
 }
 
+declare module 'react-dom' {
+  export function createPortal(children: unknown, container: Element | DocumentFragment): JSX.Element;
+}
+
 declare module 'react-dom/client' {
   export interface Root {
     render(node: unknown): void;

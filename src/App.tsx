@@ -176,7 +176,7 @@ export default function App() {
       </main>
 
       <footer className="mx-auto hidden max-w-6xl px-4 pb-10 pt-2 text-center text-[11px] text-slate-600 md:block sm:px-6 lg:px-8">
-        <p>Bio-Hack Dashboard Gen 4.1 · PWA · Shift 기반 로컬 저장</p>
+        <p>Bio-Hack Dashboard Gen 4.1.1 · PWA · Shift 기반 로컬 저장</p>
       </footer>
     </div>
   );

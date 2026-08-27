@@ -20,7 +20,7 @@ function offlinePwaPlugin(): Plugin {
         ...bundleFiles,
       ];
       const source = `
-const CACHE_NAME = 'biohack-dashboard-4.1.0';
+const CACHE_NAME = 'biohack-dashboard-4.1.1';
 const PRECACHE = ${JSON.stringify(precache)};
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE)));
