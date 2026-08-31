@@ -2,8 +2,19 @@ import readWorkbook from 'read-excel-file/browser';
 import { ROSTER_PARSER_VERSION, parseRosterWorkbook, stableSchedulePayload } from './roster.ts';
 import type { RosterAliasMap, RosterVersion, WorkbookCell, WorkbookSheetData } from '../types.ts';
 
-function normalizeCell(value: string | number | boolean | Date | null | undefined): WorkbookCell {
-  return value ?? null;
+function normalizeCell(value: unknown): WorkbookCell {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  if (
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean' ||
+    value instanceof Date
+  ) {
+    return value;
+  }
+  return null;
 }
 
 async function sha256Hex(data: ArrayBuffer | string): Promise<string> {
