@@ -1,28 +1,75 @@
 import { copyWorkSettings, defaultWorkSettings } from '../data/settings.ts';
-import type { Mode, PendingWorkSettings, PersistedState, TransportMode, WorkSettings } from '../types';
+import type {
+  Mode,
+  PendingWorkSettings,
+  PersistedState,
+  RosterSettings,
+  ShiftPhase,
+  TransportMode,
+  WorkSettings,
+} from '../types.ts';
 
 export const STORAGE_KEY = 'biohack_gen4_state';
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
+
+export const defaultRosterSettings: RosterSettings = {
+  selectedEmployeeId: null,
+  activeVersionId: null,
+  autoMode: true,
+  aliases: {},
+  overrides: {},
+};
 
 export const initialPersistedState: PersistedState = {
   schemaVersion: SCHEMA_VERSION,
   mode: 'day',
   offDay: 1,
+  nightRecoveryDay: 1,
+  nightToDayDay: 1,
   checkedTaskIds: [],
   workSettings: copyWorkSettings(defaultWorkSettings),
   pendingWorkSettings: null,
+  rosterSettings: { ...defaultRosterSettings },
 };
 
 function isMode(value: unknown): value is Mode {
-  return value === 'day' || value === 'off' || value === 'night' || value === 'recovery';
+  return value === 'day'
+    || value === 'off'
+    || value === 'night'
+    || value === 'nightRecovery'
+    || value === 'nightToDay'
+    || value === 'recovery'
+    || value === 'rest';
 }
 
 function isOffDay(value: unknown): value is 1 | 2 | 3 {
   return value === 1 || value === 2 || value === 3;
 }
 
+function isRecoveryDay(value: unknown): value is 1 | 2 {
+  return value === 1 || value === 2;
+}
+
 function isTransportMode(value: unknown): value is TransportMode {
   return value === 'drive' || value === 'transit' || value === 'walk' || value === 'bike' || value === 'other';
+}
+
+function isShiftPhase(value: unknown): value is ShiftPhase {
+  return value === 'day'
+    || value === 'dayDedicated'
+    || value === 'dayToNight1'
+    || value === 'dayToNight2'
+    || value === 'dayToNight3'
+    || value === 'night'
+    || value === 'nightRecovery1'
+    || value === 'nightRecovery2'
+    || value === 'nightToDay1'
+    || value === 'nightToDay2'
+    || value === 'nightToDay3'
+    || value === 'transitionExtraOff'
+    || value === 'transitionIrregular'
+    || value === 'off'
+    || value === 'pl';
 }
 
 function readFiniteNumber(value: unknown, fallback: number): number {
@@ -65,10 +112,8 @@ function readWorkSettings(value: unknown): WorkSettings {
   if (typeof value !== 'object' || value === null) {
     return copyWorkSettings(defaultWorkSettings);
   }
-
   const day = 'day' in value ? value.day : undefined;
   const night = 'night' in value ? value.night : undefined;
-
   return {
     day: readShiftTimeSettings(day, defaultWorkSettings.day),
     night: readShiftTimeSettings(night, defaultWorkSettings.night),
@@ -79,24 +124,58 @@ function readPending(value: unknown): PendingWorkSettings | null {
   if (typeof value !== 'object' || value === null) {
     return null;
   }
-
   const pendingValue = 'value' in value ? value.value : undefined;
   const activateAfter = 'activateAfterShiftInstance' in value ? value.activateAfterShiftInstance : undefined;
   if (typeof activateAfter !== 'string') {
     return null;
   }
+  return { value: readWorkSettings(pendingValue), activateAfterShiftInstance: activateAfter };
+}
 
-  return {
-    value: readWorkSettings(pendingValue),
-    activateAfterShiftInstance: activateAfter,
-  };
+function readAliases(value: unknown): Readonly<Record<string, string>> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return {};
+  }
+  const result: Record<string, string> = {};
+  Object.entries(value).forEach(([key, mapped]) => {
+    if (typeof mapped === 'string' && key.trim()) {
+      result[key] = mapped;
+    }
+  });
+  return result;
+}
+
+function readOverrides(value: unknown): Readonly<Record<string, ShiftPhase>> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return {};
+  }
+  const result: Record<string, ShiftPhase> = {};
+  Object.entries(value).forEach(([key, phase]) => {
+    if (isShiftPhase(phase)) {
+      result[key] = phase;
+    }
+  });
+  return result;
+}
+
+function readRosterSettings(value: unknown): RosterSettings {
+  if (typeof value !== 'object' || value === null) {
+    return { ...defaultRosterSettings };
+  }
+  const selectedEmployeeId = 'selectedEmployeeId' in value && typeof value.selectedEmployeeId === 'string' ? value.selectedEmployeeId : null;
+  const activeVersionId = 'activeVersionId' in value && typeof value.activeVersionId === 'string' ? value.activeVersionId : null;
+  const autoMode = 'autoMode' in value && typeof value.autoMode === 'boolean' ? value.autoMode : true;
+  const aliases = 'aliases' in value ? readAliases(value.aliases) : {};
+  const overrides = 'overrides' in value ? readOverrides(value.overrides) : {};
+  return { selectedEmployeeId, activeVersionId, autoMode, aliases, overrides };
 }
 
 function cloneInitialState(): PersistedState {
   return {
     ...initialPersistedState,
-    checkedTaskIds: [...initialPersistedState.checkedTaskIds],
+    checkedTaskIds: [],
     workSettings: copyWorkSettings(initialPersistedState.workSettings),
+    rosterSettings: { ...defaultRosterSettings, aliases: {}, overrides: {} },
   };
 }
 
@@ -104,7 +183,6 @@ export function parsePersistedState(raw: string | null): PersistedState {
   if (!raw) {
     return cloneInitialState();
   }
-
   const parsed: unknown = JSON.parse(raw);
   if (typeof parsed !== 'object' || parsed === null) {
     return cloneInitialState();
@@ -112,19 +190,23 @@ export function parsePersistedState(raw: string | null): PersistedState {
 
   const modeValue = 'mode' in parsed ? parsed.mode : undefined;
   const offDayValue = 'offDay' in parsed ? parsed.offDay : undefined;
+  const nightRecoveryDayValue = 'nightRecoveryDay' in parsed ? parsed.nightRecoveryDay : undefined;
+  const nightToDayDayValue = 'nightToDayDay' in parsed ? parsed.nightToDayDay : undefined;
   const checkedValue = 'checkedTaskIds' in parsed ? parsed.checkedTaskIds : undefined;
   const workSettingsValue = 'workSettings' in parsed ? parsed.workSettings : undefined;
   const pendingValue = 'pendingWorkSettings' in parsed ? parsed.pendingWorkSettings : undefined;
+  const rosterValue = 'rosterSettings' in parsed ? parsed.rosterSettings : undefined;
 
   return {
     schemaVersion: SCHEMA_VERSION,
     mode: isMode(modeValue) ? modeValue : initialPersistedState.mode,
-    offDay: isOffDay(offDayValue) ? offDayValue : initialPersistedState.offDay,
-    checkedTaskIds: Array.isArray(checkedValue)
-      ? checkedValue.filter((value): value is string => typeof value === 'string')
-      : [],
+    offDay: isOffDay(offDayValue) ? offDayValue : 1,
+    nightRecoveryDay: isRecoveryDay(nightRecoveryDayValue) ? nightRecoveryDayValue : 1,
+    nightToDayDay: isOffDay(nightToDayDayValue) ? nightToDayDayValue : 1,
+    checkedTaskIds: Array.isArray(checkedValue) ? checkedValue.filter((value): value is string => typeof value === 'string') : [],
     workSettings: readWorkSettings(workSettingsValue),
     pendingWorkSettings: readPending(pendingValue),
+    rosterSettings: readRosterSettings(rosterValue),
   };
 }
 

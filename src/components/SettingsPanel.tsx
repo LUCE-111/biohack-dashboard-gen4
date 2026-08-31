@@ -354,7 +354,7 @@ export function SettingsPanel({ settings, pending, onSave }: SettingsPanelProps)
           onClick={() => setDraft(copyWorkSettings(defaultWorkSettings))}
           className="min-h-12 rounded-2xl border border-white/8 px-4 text-sm font-semibold text-slate-400 hover:text-slate-100"
         >
-          Gen 4.2 기본값으로 되돌리기
+          근무·이동 기본값으로 되돌리기
         </button>
         <button
           type="button"

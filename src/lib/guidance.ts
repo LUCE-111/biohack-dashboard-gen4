@@ -78,5 +78,44 @@ export function getGuidanceItems(scheduleKey: ScheduleKey, settings: WorkSetting
     ];
   }
 
+  if (scheduleKey === 'off1' || scheduleKey === 'off2' || scheduleKey === 'off3') {
+    return [
+      {
+        id: 'day-to-night-direction',
+        title: '주 → 야 전환 방향',
+        body: '다음 야간근무에 가까워질수록 수면·활동 시각을 늦추고, 마지막 전환일에는 계획된 낮잠과 낮잠 후 충분히 깨는 시간을 고려할 수 있습니다. 개인차가 커서 고정 시각을 처방하지 않습니다.',
+        evidence: 'conditional',
+      },
+    ];
+  }
+
+  if (scheduleKey === 'nightRecovery1' || scheduleKey === 'nightRecovery2') {
+    return [
+      {
+        id: 'night-recovery-purpose',
+        title: '야간 사이 회복',
+        body: '다음 근무도 야간이므로 완전한 주간형 복귀보다 수면기회 확보와 누적 피로 감소를 우선하는 단계입니다.',
+        evidence: 'general',
+      },
+    ];
+  }
+
+  if (scheduleKey === 'nightToDay1' || scheduleKey === 'nightToDay2' || scheduleKey === 'nightToDay3') {
+    return [
+      {
+        id: 'night-to-day-light',
+        title: '야 → 주 복귀',
+        body: '주간근무가 가까워질수록 기상과 활동 시간을 앞당기는 방향으로 계획합니다. 기상 후 빛과 주간 활동은 목표 리듬으로 접근하는 데 활용할 수 있습니다.',
+        evidence: 'conditional',
+      },
+      {
+        id: 'night-to-day-caffeine',
+        title: '늦은 카페인·낮잠 주의',
+        body: '다음 취침을 앞당겨야 하는 단계에서는 늦은 카페인과 긴 늦은 낮잠이 수면 진입을 방해할 수 있으므로 실제 취침 목표를 기준으로 보수적으로 조정합니다.',
+        evidence: 'general',
+      },
+    ];
+  }
+
   return [];
 }

@@ -37,8 +37,8 @@ test('every referenced supplement exists in supplement master data', () => {
   }
 });
 
-test('all six source schedule variants are represented', () => {
-  assert.deepEqual(Object.keys(schedules).sort(), ['day', 'night', 'off1', 'off2', 'off3', 'recovery']);
+test('all roster-aware schedule variants are represented', () => {
+  assert.deepEqual(Object.keys(schedules).sort(), ['day', 'irregular', 'night', 'nightRecovery1', 'nightRecovery2', 'nightToDay1', 'nightToDay2', 'nightToDay3', 'off1', 'off2', 'off3', 'recovery', 'rest']);
 });
 
 test('day preparation, commute and post-shift blocks recalculate from settings', () => {

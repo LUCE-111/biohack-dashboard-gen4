@@ -27,8 +27,8 @@ export const schedules: Readonly<Record<ScheduleKey, Schedule>> = {
   off1: {
     key: 'off1',
     theme: 'off',
-    eyebrow: 'OFF DAY 1 · REST',
-    title: '전환기 1일차 · 휴식',
+    eyebrow: 'DAY → NIGHT · 1/3',
+    title: '주 → 야 전환 · 1일차',
     tasks: [
       { id: 'off1-sleep', start: '00:00', end: '08:30', tag: 'sleep', type: 'sleep', title: '회복 수면', description: '주간 근무 피로 해소. 9시간 수면 목표.' },
       { id: 'off1-breakfast', start: '08:30', end: '09:30', tag: 'food', type: 'normal', title: '기상 & 아침', description: '자연스러운 기상. 일반 루틴 유지.' },
@@ -43,8 +43,8 @@ export const schedules: Readonly<Record<ScheduleKey, Schedule>> = {
   off2: {
     key: 'off2',
     theme: 'off',
-    eyebrow: 'OFF DAY 2 · DELAY',
-    title: '전환기 2일차 · 리듬 밀기',
+    eyebrow: 'DAY → NIGHT · 2/3',
+    title: '주 → 야 전환 · 2일차',
     tasks: [
       { id: 'off2-sleep', start: '00:00', end: '08:30', tag: 'sleep', type: 'sleep', title: '수면 중', description: '전날 23:30부터 이어진 수면 (9h).' },
       { id: 'off2-wake', start: '08:30', end: '09:30', tag: 'rest', type: 'normal', title: '기상', description: 'B-Complex 섭취 금지. 오후로 미룸.' },
@@ -60,8 +60,8 @@ export const schedules: Readonly<Record<ScheduleKey, Schedule>> = {
   off3: {
     key: 'off3',
     theme: 'off',
-    eyebrow: 'OFF DAY 3 · ADAPT',
-    title: '전환기 3일차 · 야간 적응',
+    eyebrow: 'DAY → NIGHT · 3/3',
+    title: '주 → 야 전환 · 3일차',
     tasks: [
       { id: 'off3-sleep', start: '00:00', end: '09:30', tag: 'sleep', type: 'sleep', title: '수면 중', description: '전날 01:30부터 이어진 수면 (8h).' },
       { id: 'off3-wake', start: '09:30', end: '10:30', tag: 'rest', type: 'normal', title: '기상', description: '아침 B-Complex 섭취 금지.' },
@@ -100,6 +100,105 @@ export const schedules: Readonly<Record<ScheduleKey, Schedule>> = {
     info: { exercise: '운동 금지', diet: '2:5:3 (02시 이후 금식)' },
     safety: ['퇴근길 졸음 쉼터 활용 필수.'],
   },
+  nightRecovery1: {
+    key: 'nightRecovery1',
+    theme: 'night',
+    eyebrow: 'NIGHT RECOVERY · 1/2',
+    title: '야간 사이 회복 · 1일차',
+    tasks: [
+      { id: 'nr1-sleep', start: '00:00', end: '09:30', tag: 'sleep', type: 'sleep', title: '주간 수면', description: '직전 야간근무 뒤 수면을 우선하고, 다음 야간을 위해 완전한 주간형 복귀는 시도하지 않음.' },
+      { id: 'nr1-wake', start: '09:30', end: '11:00', tag: 'rest', type: 'normal', title: '천천히 기상', description: '수분과 가벼운 식사. 수면 부족감이 크면 회복을 우선.' },
+      { id: 'nr1-day', start: '11:00', end: '17:00', tag: 'rest', type: 'normal', title: '저강도 활동', description: '과도한 피로 누적을 피하고 다음 야간근무를 위한 회복 여유를 확보.' },
+      { id: 'nr1-evening', start: '17:00', end: '01:00', tag: 'rest', type: 'normal', title: '야간 리듬 유지', description: '다음 야간근무까지의 간격을 고려해 너무 이른 취침으로 고정하지 않음.' },
+      { id: 'nr1-sleep-entry', start: '01:00', end: '24:00', tag: 'sleep', type: 'sleep', title: '수면 진입', description: '다음 날 회복과 야간 준비를 위한 수면.' },
+    ],
+    info: { exercise: '저강도 또는 휴식', diet: '소화 부담 최소화' },
+    safety: ['야간근무 사이 비번은 주간 복귀 단계가 아니라 다음 야간을 위한 회복 단계입니다.'],
+  },
+  nightRecovery2: {
+    key: 'nightRecovery2',
+    theme: 'night',
+    eyebrow: 'NIGHT RECOVERY · 2/2',
+    title: '야간 사이 회복 · 2일차',
+    tasks: [
+      { id: 'nr2-sleep', start: '00:00', end: '10:30', tag: 'sleep', type: 'sleep', title: '회복 수면', description: '다음 야간근무 직전날. 수면기회를 확보해 야간근무 전 피로를 줄임.' },
+      { id: 'nr2-active', start: '10:30', end: '14:00', tag: 'rest', type: 'normal', title: '활동 시간', description: '낮 시간에 기본 활동을 하되 과도한 운동은 피함.' },
+      { id: 'nr2-nap', start: '14:00', end: '15:30', tag: 'sleep', type: 'sleep', title: '계획된 낮잠', description: '다음 야간근무 전 계획된 낮잠을 고려할 수 있는 구간.' },
+      { id: 'nr2-buffer', start: '15:30', end: '16:00', tag: 'rest', type: 'normal', title: '낮잠 후 회복', description: '깬 직후 sleep inertia를 고려해 운전이나 중요 활동과 간격을 둠.' },
+      { id: 'nr2-evening', start: '16:00', end: '24:00', tag: 'rest', type: 'normal', title: '야간 준비', description: '다음 야간근무 시작에 맞춰 준비·빛·카페인 전략을 정리.' },
+    ],
+    info: { exercise: '가벼운 활동', diet: '야간근무 전 소화 부담 최소화' },
+    safety: ['낮잠 직후 운전·안전 민감 활동은 충분히 깬 뒤 시작하세요.'],
+  },
+  nightToDay1: {
+    key: 'nightToDay1',
+    theme: 'recovery',
+    eyebrow: 'NIGHT → DAY · 1/3',
+    title: '야 → 주 전환 · 1일차',
+    tasks: [
+      { id: 'ntd1-home', start: '00:00', end: '09:30', tag: 'rest', type: 'normal', title: '마지막 야간 종료 & 귀가', description: '마지막 야간근무 이후 귀가와 수면 준비를 우선.' },
+      { id: 'ntd1-sleep', start: '09:30', end: '14:00', tag: 'sleep', type: 'sleep', title: '회복 수면', description: '과도하게 늦은 시간까지 이어지지 않도록 주간 복귀의 첫 단계로 사용.' },
+      { id: 'ntd1-light', start: '14:00', end: '18:00', tag: 'rest', type: 'normal', title: '기상 & 주간 활동', description: '기상 후 주간 환경에 노출되며 활동 시간을 앞쪽으로 이동.' },
+      { id: 'ntd1-winddown', start: '18:00', end: '23:30', tag: 'rest', type: 'normal', title: '저녁 & 이완', description: '카페인을 늦게 사용하지 않고 취침 준비 시간을 앞당김.' },
+      { id: 'ntd1-bed', start: '23:30', end: '24:00', tag: 'sleep', type: 'sleep', title: '취침', description: '다음 날 기상을 앞당기기 위한 첫 조기 취침.' },
+    ],
+    info: { exercise: '산책 중심', diet: '일반식, 늦은 야식 최소화' },
+    safety: ['마지막 야간근무 직후에는 졸음운전 위험을 우선 관리하세요.'],
+  },
+  nightToDay2: {
+    key: 'nightToDay2',
+    theme: 'recovery',
+    eyebrow: 'NIGHT → DAY · 2/3',
+    title: '야 → 주 전환 · 2일차',
+    tasks: [
+      { id: 'ntd2-sleep', start: '00:00', end: '08:30', tag: 'sleep', type: 'sleep', title: '야간 수면', description: '주간근무 기상시간에 가까워지도록 기상 시각을 앞당김.' },
+      { id: 'ntd2-morning', start: '08:30', end: '12:00', tag: 'rest', type: 'normal', title: '아침 활동', description: '기상 후 주간 활동과 빛 노출을 활용해 주간 리듬으로 접근.' },
+      { id: 'ntd2-day', start: '12:00', end: '19:00', tag: 'rest', type: 'normal', title: '주간 활동', description: '늦은 낮잠을 피하고 저녁 수면압을 유지.' },
+      { id: 'ntd2-winddown', start: '19:00', end: '23:00', tag: 'rest', type: 'normal', title: '저녁 이완', description: '다음 주간근무를 위해 취침 준비 시각을 한 단계 더 앞당김.' },
+      { id: 'ntd2-bed', start: '23:00', end: '24:00', tag: 'sleep', type: 'sleep', title: '취침', description: '주간근무 기상 목표에 가까워지는 수면 구간.' },
+    ],
+    info: { exercise: '중저강도', diet: '일반식' },
+    safety: ['늦은 카페인과 긴 늦은 낮잠은 다음 취침을 방해할 수 있습니다.'],
+  },
+  nightToDay3: {
+    key: 'nightToDay3',
+    theme: 'day',
+    eyebrow: 'NIGHT → DAY · 3/3',
+    title: '야 → 주 전환 · 3일차',
+    tasks: [
+      { id: 'ntd3-sleep', start: '00:00', end: '07:30', tag: 'sleep', type: 'sleep', title: '주간형 수면', description: '다음 주간근무 기상시각에 최대한 가까운 수면 계획.' },
+      { id: 'ntd3-morning', start: '07:30', end: '12:00', tag: 'rest', type: 'normal', title: '아침 루틴', description: '다음 날 출근 준비와 유사한 시간대에 기상·식사·활동.' },
+      { id: 'ntd3-day', start: '12:00', end: '18:00', tag: 'rest', type: 'normal', title: '주간 활동', description: '주간근무 전날이므로 과도한 피로를 만들지 않음.' },
+      { id: 'ntd3-prep', start: '18:00', end: '22:30', tag: 'prep', type: 'normal', title: '내일 주간근무 준비', description: '출근 물품과 아침 루틴을 미리 준비하고 수면기회를 확보.' },
+      { id: 'ntd3-bed', start: '22:30', end: '24:00', tag: 'sleep', type: 'sleep', title: '조기 취침', description: '다음 주간근무에 필요한 수면기회를 우선 확보.' },
+    ],
+    info: { exercise: '가벼운 운동 또는 휴식', diet: '주간근무 전 일반식' },
+    safety: ['다음 날 출근 준비·이동 시간을 역산해 충분한 수면기회를 확보하세요.'],
+  },
+  rest: {
+    key: 'rest',
+    theme: 'off',
+    eyebrow: 'OFF · FLEX',
+    title: '비번',
+    tasks: [
+      { id: 'rest-sleep', start: '00:00', end: '08:30', tag: 'sleep', type: 'sleep', title: '수면', description: '고정 전환 목적이 없는 비번. 누적 피로에 따라 충분한 수면을 우선.' },
+      { id: 'rest-day', start: '08:30', end: '18:00', tag: 'rest', type: 'normal', title: '자유 활동', description: '다음 근무를 확인하면서 운동·사회활동·회복을 유연하게 배치.' },
+      { id: 'rest-evening', start: '18:00', end: '24:00', tag: 'rest', type: 'normal', title: '저녁', description: '다음 근무 시작시각을 기준으로 취침 계획을 조정.' },
+    ],
+    info: { exercise: '컨디션 기반', diet: '일반식' },
+    safety: ['다음 근무표가 있으면 자동 전환 모드가 우선합니다.'],
+  },
+  irregular: {
+    key: 'irregular',
+    theme: 'off',
+    eyebrow: 'ROSTER · REVIEW',
+    title: '비표준 전환 · 확인 필요',
+    tasks: [
+      { id: 'irregular-review', start: '00:00', end: '24:00', tag: 'alert', type: 'normal', title: '근무표 확인', description: '특수근무 또는 중복 배정으로 자동 전환을 확정하지 않았습니다. 근무표 화면에서 확인 후 오늘만 override할 수 있습니다.' },
+    ],
+    info: { exercise: '수동 확인 필요', diet: '수동 확인 필요' },
+    safety: ['앱이 모호한 근무표를 임의로 한 근무 유형으로 결정하지 않습니다.'],
+  },
   recovery: {
     key: 'recovery',
     theme: 'recovery',
@@ -120,14 +219,22 @@ export const schedules: Readonly<Record<ScheduleKey, Schedule>> = {
 
 export const modeTabs: readonly { mode: Mode; label: string; meta: string }[] = [
   { mode: 'day', label: '주간', meta: 'Day' },
-  { mode: 'off', label: '전환기', meta: 'Off' },
+  { mode: 'off', label: '주→야', meta: 'D→N' },
   { mode: 'night', label: '야간', meta: 'Night' },
-  { mode: 'recovery', label: '회복', meta: 'Reset' },
+  { mode: 'nightRecovery', label: '야간 회복', meta: 'N-R' },
+  { mode: 'nightToDay', label: '야→주', meta: 'N→D' },
+  { mode: 'rest', label: '비번', meta: 'Off' },
+  { mode: 'recovery', label: '리커버리', meta: 'Reset' },
 ];
 
-export function getScheduleKey(mode: Mode, offDay: 1 | 2 | 3): ScheduleKey {
-  if (mode === 'off') {
-    return `off${offDay}`;
-  }
+export function getScheduleKey(
+  mode: Mode,
+  offDay: 1 | 2 | 3,
+  nightRecoveryDay: 1 | 2 = 1,
+  nightToDayDay: 1 | 2 | 3 = 1,
+): ScheduleKey {
+  if (mode === 'off') return `off${offDay}`;
+  if (mode === 'nightRecovery') return `nightRecovery${nightRecoveryDay}`;
+  if (mode === 'nightToDay') return `nightToDay${nightToDayDay}`;
   return mode;
 }

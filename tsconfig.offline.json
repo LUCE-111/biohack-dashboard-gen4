@@ -2,6 +2,7 @@
   "extends": "./tsconfig.app.json",
   "include": [
     "src",
-    "scripts/types/react-validation.d.ts"
+    "scripts/types/react-validation.d.ts",
+    "scripts/types/read-excel-file-validation.d.ts"
   ]
 }

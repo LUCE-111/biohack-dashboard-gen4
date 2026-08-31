@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { parsePersistedState, SCHEMA_VERSION } from './persistence.ts';
 
-test('legacy Gen 4 state migrates to schema version 3', () => {
+test('legacy Gen 4 state migrates to schema version 4', () => {
   const legacy = JSON.stringify({
     mode: 'night',
     offDay: 2,
@@ -16,9 +16,11 @@ test('legacy Gen 4 state migrates to schema version 3', () => {
   assert.equal(state.workSettings.night.workStart, '17:40');
   assert.equal(state.workSettings.night.preShiftPrepMinutes, 40);
   assert.equal(state.workSettings.night.commuteFromTransport, 'drive');
+  assert.equal(state.rosterSettings.activeVersionId, null);
+  assert.equal(state.rosterSettings.autoMode, true);
 });
 
-test('Gen 4.1 work settings retain commute times and receive Gen 4.2 transition defaults', () => {
+test('Gen 4.1 work settings retain commute times and receive later transition defaults', () => {
   const gen41 = JSON.stringify({
     schemaVersion: 2,
     mode: 'day',

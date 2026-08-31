@@ -1,24 +1,43 @@
 import { useEffect, useMemo, useState } from 'react';
 import { copyWorkSettings } from '../data/settings';
 import { initialPersistedState, parsePersistedState, serializePersistedState, STORAGE_KEY } from '../lib/persistence';
-import type { Mode, PendingWorkSettings, PersistedState, SettingsApplyMode, WorkSettings } from '../types';
+import type {
+  Mode,
+  PendingWorkSettings,
+  PersistedState,
+  RosterAliasMap,
+  RosterSettings,
+  SettingsApplyMode,
+  ShiftPhase,
+  WorkSettings,
+} from '../types';
 
 interface DashboardStateResult {
   mode: Mode;
   offDay: 1 | 2 | 3;
+  nightRecoveryDay: 1 | 2;
+  nightToDayDay: 1 | 2 | 3;
   checkedTaskIds: ReadonlySet<string>;
   workSettings: WorkSettings;
   pendingWorkSettings: PendingWorkSettings | null;
+  rosterSettings: RosterSettings;
   isLoading: boolean;
   error: string | null;
   canUndoReset: boolean;
   setMode: (mode: Mode) => void;
   setOffDay: (day: 1 | 2 | 3) => void;
+  setNightRecoveryDay: (day: 1 | 2) => void;
+  setNightToDayDay: (day: 1 | 2 | 3) => void;
   toggleTask: (taskId: string) => void;
   resetChecksForShift: (shiftInstanceKey: string) => void;
   undoReset: () => void;
   saveWorkSettings: (settings: WorkSettings, applyMode: SettingsApplyMode, currentShiftInstance: string) => void;
   activatePendingSettings: (currentShiftInstance: string) => void;
+  setRosterActiveVersion: (versionId: string | null) => void;
+  setRosterEmployee: (employeeId: string | null) => void;
+  setRosterAutoMode: (enabled: boolean) => void;
+  setRosterAliases: (aliases: RosterAliasMap) => void;
+  setRosterOverride: (date: string, phase: ShiftPhase | null) => void;
   dismissError: () => void;
 }
 
@@ -47,7 +66,6 @@ export function useDashboardState(): DashboardStateResult {
     if (isLoading) {
       return;
     }
-
     try {
       window.localStorage.setItem(STORAGE_KEY, serializePersistedState(state));
     } catch {
@@ -57,12 +75,8 @@ export function useDashboardState(): DashboardStateResult {
 
   const checkedSet = useMemo(() => new Set(state.checkedTaskIds), [state.checkedTaskIds]);
 
-  const setMode = (mode: Mode): void => {
-    setState((current) => ({ ...current, mode }));
-  };
-
-  const setOffDay = (offDay: 1 | 2 | 3): void => {
-    setState((current) => ({ ...current, offDay }));
+  const updateRoster = (updater: (settings: RosterSettings) => RosterSettings): void => {
+    setState((current) => ({ ...current, rosterSettings: updater(current.rosterSettings) }));
   };
 
   const toggleTask = (taskId: string): void => {
@@ -83,10 +97,7 @@ export function useDashboardState(): DashboardStateResult {
     setState((current) => {
       const removed = current.checkedTaskIds.filter((taskId) => taskId.startsWith(prefix));
       setResetSnapshot({ ids: removed });
-      return {
-        ...current,
-        checkedTaskIds: current.checkedTaskIds.filter((taskId) => !taskId.startsWith(prefix)),
-      };
+      return { ...current, checkedTaskIds: current.checkedTaskIds.filter((taskId) => !taskId.startsWith(prefix)) };
     });
   };
 
@@ -94,30 +105,18 @@ export function useDashboardState(): DashboardStateResult {
     if (!resetSnapshot) {
       return;
     }
-
-    setState((current) => ({
-      ...current,
-      checkedTaskIds: [...new Set([...current.checkedTaskIds, ...resetSnapshot.ids])],
-    }));
+    setState((current) => ({ ...current, checkedTaskIds: [...new Set([...current.checkedTaskIds, ...resetSnapshot.ids])] }));
     setResetSnapshot(null);
   };
 
   const saveWorkSettings = (settings: WorkSettings, applyMode: SettingsApplyMode, currentShiftInstance: string): void => {
     setState((current) => {
       if (applyMode === 'now') {
-        return {
-          ...current,
-          workSettings: copyWorkSettings(settings),
-          pendingWorkSettings: null,
-        };
+        return { ...current, workSettings: copyWorkSettings(settings), pendingWorkSettings: null };
       }
-
       return {
         ...current,
-        pendingWorkSettings: {
-          value: copyWorkSettings(settings),
-          activateAfterShiftInstance: currentShiftInstance,
-        },
+        pendingWorkSettings: { value: copyWorkSettings(settings), activateAfterShiftInstance: currentShiftInstance },
       };
     });
   };
@@ -127,31 +126,44 @@ export function useDashboardState(): DashboardStateResult {
       if (!current.pendingWorkSettings || current.pendingWorkSettings.activateAfterShiftInstance === currentShiftInstance) {
         return current;
       }
-
-      return {
-        ...current,
-        workSettings: copyWorkSettings(current.pendingWorkSettings.value),
-        pendingWorkSettings: null,
-      };
+      return { ...current, workSettings: copyWorkSettings(current.pendingWorkSettings.value), pendingWorkSettings: null };
     });
   };
 
   return {
     mode: state.mode,
     offDay: state.offDay,
+    nightRecoveryDay: state.nightRecoveryDay,
+    nightToDayDay: state.nightToDayDay,
     checkedTaskIds: checkedSet,
     workSettings: state.workSettings,
     pendingWorkSettings: state.pendingWorkSettings,
+    rosterSettings: state.rosterSettings,
     isLoading,
     error,
     canUndoReset: resetSnapshot !== null,
-    setMode,
-    setOffDay,
+    setMode: (mode) => setState((current) => ({ ...current, mode })),
+    setOffDay: (offDay) => setState((current) => ({ ...current, offDay })),
+    setNightRecoveryDay: (nightRecoveryDay) => setState((current) => ({ ...current, nightRecoveryDay })),
+    setNightToDayDay: (nightToDayDay) => setState((current) => ({ ...current, nightToDayDay })),
     toggleTask,
     resetChecksForShift,
     undoReset,
     saveWorkSettings,
     activatePendingSettings,
+    setRosterActiveVersion: (activeVersionId) => updateRoster((settings) => ({ ...settings, activeVersionId })),
+    setRosterEmployee: (selectedEmployeeId) => updateRoster((settings) => ({ ...settings, selectedEmployeeId })),
+    setRosterAutoMode: (autoMode) => updateRoster((settings) => ({ ...settings, autoMode })),
+    setRosterAliases: (aliases) => updateRoster((settings) => ({ ...settings, aliases: { ...aliases } })),
+    setRosterOverride: (date, phase) => updateRoster((settings) => {
+      const overrides = { ...settings.overrides };
+      if (phase) {
+        overrides[date] = phase;
+      } else {
+        delete overrides[date];
+      }
+      return { ...settings, overrides };
+    }),
     dismissError: () => setError(null),
   };
 }
